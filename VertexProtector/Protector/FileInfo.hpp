@@ -54,6 +54,12 @@ namespace Protector::FileInfo
 			return false;
 		}
 
+		if (outFileInfo.ntHeaders->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+		{
+			DEBUG_PRINT("x64 binaries not supported");
+			return false;
+		}
+
 		DEBUG_PRINT("File size: %llu KB\n", outFileInfo.size / 1024);
 		DEBUG_PRINT("Machine: %X\n", outFileInfo.ntHeaders->FileHeader.Machine);
 		DEBUG_PRINT("Sections: %u\n", outFileInfo.ntHeaders->FileHeader.NumberOfSections);
