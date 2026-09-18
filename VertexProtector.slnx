@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="VertexProtector/VertexProtector.vcxproj" Id="071bacff-7f27-4bd3-ae5e-2adafe428566" />
+</Solution>
