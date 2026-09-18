@@ -10,6 +10,9 @@
 
 #include <string>
 #include <vector>
+#include <thread>
+
+#include <Protector/FileInfo.hpp>
 
 namespace Framework::UI
 {
@@ -60,6 +63,17 @@ namespace Framework::UI
 				}
 				else if (RenderingPage == 1)
 				{
+					if (!AnalisysThreadRunning)
+					{
+						AnalisysThreadRunning = true;
+						std::thread([this]() {
+							if (!Protector::FileInfo::LoadFile(DroppedFilePath, AnalyzedFileInfo))
+							{
+							}
+							
+						}).detach();
+					}
+
 					ImGui::SetCursorPosY(WindowSize.y - 350);
 					Widgets::TextCentered(FontManager::Get()[FontID::BIG], ICON_FA_FILE);
 					ImGui::SetCursorPosY(WindowSize.y - 250);
@@ -87,5 +101,9 @@ namespace Framework::UI
 		int RenderingPage = 0;
 		std::string DroppedFilePath;
 		std::string DroppedFileName;
+
+		Protector::FileInfo::FileInfo_t AnalyzedFileInfo;
+
+		bool AnalisysThreadRunning = false;
 	};
 }
