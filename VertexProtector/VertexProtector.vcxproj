@@ -78,9 +78,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)$(ProjectName)\Dependencies\ImGui\;$(SolutionDir)$(ProjectName)\Dependencies\;$(SolutionDir)$(ProjectName)\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(ProjectName)\Dependencies\Libs\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)$(ProjectName)\Dependencies\ImGui\;$(SolutionDir)$(ProjectName)\Dependencies\;$(SolutionDir)$(ProjectName)\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(ProjectName)\Dependencies\Libs\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -120,13 +122,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);ZYDIS_STATIC_DEFINE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Zycore.lib;Zydis.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -138,13 +141,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions);ZYDIS_STATIC_DEFINE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Zycore.lib;Zydis.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -164,6 +168,28 @@
     <ClInclude Include="Dependencies\ImGui\imstb_rectpack.h" />
     <ClInclude Include="Dependencies\ImGui\imstb_textedit.h" />
     <ClInclude Include="Dependencies\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Dependencies\Zycore\Allocator.h" />
+    <ClInclude Include="Dependencies\Zycore\API\Memory.h" />
+    <ClInclude Include="Dependencies\Zycore\API\Process.h" />
+    <ClInclude Include="Dependencies\Zycore\API\Synchronization.h" />
+    <ClInclude Include="Dependencies\Zycore\API\Terminal.h" />
+    <ClInclude Include="Dependencies\Zycore\API\Thread.h" />
+    <ClInclude Include="Dependencies\Zycore\ArgParse.h" />
+    <ClInclude Include="Dependencies\Zycore\Atomic.h" />
+    <ClInclude Include="Dependencies\Zycore\Bitset.h" />
+    <ClInclude Include="Dependencies\Zycore\Comparison.h" />
+    <ClInclude Include="Dependencies\Zycore\Defines.h" />
+    <ClInclude Include="Dependencies\Zycore\Format.h" />
+    <ClInclude Include="Dependencies\Zycore\Internal\AtomicGNU.h" />
+    <ClInclude Include="Dependencies\Zycore\Internal\AtomicMSVC.h" />
+    <ClInclude Include="Dependencies\Zycore\LibC.h" />
+    <ClInclude Include="Dependencies\Zycore\List.h" />
+    <ClInclude Include="Dependencies\Zycore\Object.h" />
+    <ClInclude Include="Dependencies\Zycore\Status.h" />
+    <ClInclude Include="Dependencies\Zycore\String.h" />
+    <ClInclude Include="Dependencies\Zycore\Types.h" />
+    <ClInclude Include="Dependencies\Zycore\Vector.h" />
+    <ClInclude Include="Dependencies\Zycore\Zycore.h" />
     <ClInclude Include="Framework\Framework.hpp" />
     <ClInclude Include="Framework\UI\FontManager.hpp" />
     <ClInclude Include="Framework\UI\Fonts.hpp" />

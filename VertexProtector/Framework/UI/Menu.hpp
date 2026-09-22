@@ -63,6 +63,8 @@ namespace Framework::UI
 				}
 				else if (RenderingPage == 1)
 				{
+					static float progress = 0.0f;
+
 					if (!AnalisysThreadRunning)
 					{
 						AnalisysThreadRunning = true;
@@ -70,6 +72,8 @@ namespace Framework::UI
 							if (!Protector::FileInfo::LoadFile(DroppedFilePath, AnalyzedFileInfo))
 							{
 							}
+
+							progress = 1.f;
 							
 						}).detach();
 					}
@@ -79,7 +83,6 @@ namespace Framework::UI
 					ImGui::SetCursorPosY(WindowSize.y - 250);
 					Widgets::TextCentered(FontManager::Get()[FontID::Regular], "Analyzing: " + DroppedFileName);
 
-					static float progress = 0.0f;
 					progress += ImGui::GetIO().DeltaTime * 0.1f; // Simulate progress over time
 					if (progress >= 1.0f)
 					{

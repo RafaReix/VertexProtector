@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include <Zydis/Zydis.h>
+
 namespace Protector::FileInfo
 {
 	struct ImportFunction
@@ -32,6 +34,19 @@ namespace Protector::FileInfo
 		std::vector<ImportFunction> functions;
 	};
 
+	struct IATReference
+	{
+		uint32_t instructionRva;
+		uint32_t iatRva;
+		bool isCall;
+
+		std::string moduleName;
+		std::string functionName;
+
+		bool importedByOrdinal = false;
+		uint16_t ordinal = 0;
+	};
+
 	struct FileInfo_t
 	{
 		std::string path;
@@ -50,13 +65,14 @@ namespace Protector::FileInfo
 		{
 			bool hasImports = false;
 
-			uint32_t totalImports;
-			uint32_t totalModules;
+			uint32_t totalImports = 0;
+			uint32_t totalModules = 0;
 
 			uint32_t directoryRva = 0;
 			uint32_t directorySize = 0;
 
 			std::vector<ImportModule> modules;
+			std::vector<IATReference> references;
 		}importsInfo;
 	};
 
@@ -180,6 +196,8 @@ namespace Protector::FileInfo
 						{
 							function.importedByOrdinal = true;
 							function.ordinal = static_cast<uint16_t>(IMAGE_ORDINAL64(thunk[i].u1.Ordinal));
+
+							DEBUG_PRINT("Import: %s!#%u | Thunk RVA: %08llX | IAT RVA: %08llX\n", module.name.c_str(), function.ordinal, function.thunkRva, function.iatRva);
 						}
 						else
 						{
@@ -193,6 +211,8 @@ namespace Protector::FileInfo
 
 							function.hint = importByName->Hint;
 							function.name = reinterpret_cast<const char*>(importByName->Name);
+
+							DEBUG_PRINT("Import: %s!%s | Hint: %u | Thunk RVA: %08llX | IAT RVA: %08llX\n", module.name.c_str(), function.name.c_str(), function.hint, function.thunkRva, function.iatRva);
 						}
 
 						module.functions.push_back(std::move(function));
@@ -205,6 +225,121 @@ namespace Protector::FileInfo
 
 				DEBUG_PRINT("Total Imported Modules: %u\n", outFileInfo.importsInfo.totalModules);
 				DEBUG_PRINT("Total Imported Functions: %u\n", outFileInfo.importsInfo.totalImports);
+			}
+		}
+
+		struct ImportLookup
+		{
+			const ImportModule* module;
+			const ImportFunction* function;
+		};
+
+		std::unordered_map<uint32_t, ImportLookup> iatLookup;
+
+		for (const auto& module : outFileInfo.importsInfo.modules)
+		{
+			for (const auto& function : module.functions)
+			{
+				iatLookup.emplace(static_cast<uint32_t>(function.iatRva), ImportLookup{ &module, &function });
+			}
+		}
+
+		ZydisDecoder decoder;
+		ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
+
+		auto section = IMAGE_FIRST_SECTION(outFileInfo.ntHeaders);
+
+		// Code Scan
+		for (uint16_t i = 0; i < outFileInfo.ntHeaders->FileHeader.NumberOfSections; ++i, ++section)
+		{
+			if (!(section->Characteristics & IMAGE_SCN_MEM_EXECUTE))
+				continue;
+
+			uint32_t rawStart = section->PointerToRawData;
+			uint32_t rawSize = section->SizeOfRawData;
+
+			if (rawStart >= outFileInfo.data.size())
+				continue;
+
+			if (rawStart + rawSize > outFileInfo.data.size())
+				rawSize = static_cast<uint32_t>(outFileInfo.data.size() - rawStart);
+
+			uint32_t offset = 0;
+
+			while (offset < rawSize)
+			{
+				const uint8_t* instructionData = outFileInfo.data.data() + rawStart + offset;
+				const size_t bytesRemaining = rawSize - offset;
+
+				ZydisDecodedInstruction instruction;
+				ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+
+				ZyanStatus status = ZydisDecoderDecodeFull(&decoder, instructionData, bytesRemaining, &instruction, operands);
+
+				if (!ZYAN_SUCCESS(status))
+				{
+					++offset;
+					continue;
+				}
+
+				const uint32_t instructionRva = section->VirtualAddress + offset;
+
+				if (instruction.mnemonic == ZYDIS_MNEMONIC_CALL || instruction.mnemonic == ZYDIS_MNEMONIC_JMP)
+				{
+					for (uint8_t opIndex = 0; opIndex < instruction.operand_count_visible; ++opIndex)
+					{
+						const auto& op = operands[opIndex];
+
+						if (op.type != ZYDIS_OPERAND_TYPE_MEMORY)
+							continue;
+
+						if (op.mem.base != ZYDIS_REGISTER_RIP)
+							continue;
+
+						const int64_t displacement = op.mem.disp.value;
+
+						const int64_t targetRva = static_cast<int64_t>(instructionRva) + instruction.length + displacement;
+
+						if (targetRva >= 0 && targetRva <= UINT32_MAX)
+						{
+							auto it = iatLookup.find(static_cast<uint32_t>(targetRva));
+							if (it != iatLookup.end())
+							{
+								const auto* module = it->second.module;
+								const auto* function = it->second.function;
+
+								IATReference reference;
+
+								reference.instructionRva = instructionRva;
+								reference.iatRva = static_cast<uint32_t>(targetRva);
+
+								reference.isCall = instruction.mnemonic == ZYDIS_MNEMONIC_CALL;
+
+								reference.moduleName = module->name;
+
+								reference.importedByOrdinal = function->importedByOrdinal;
+
+								reference.ordinal = function->ordinal;
+
+								if (!function->importedByOrdinal)
+									reference.functionName = function->name;
+
+								if (reference.importedByOrdinal)
+								{
+									DEBUG_PRINT("%s RVA %08X -> %s!#%u [IAT %08X]\n", reference.isCall ? "CALL" : "JMP", reference.instructionRva, reference.moduleName.c_str(), reference.ordinal, reference.iatRva);
+								}
+								else
+								{
+									DEBUG_PRINT("%s RVA %08X -> %s!%s [IAT %08X]\n", reference.isCall ? "CALL" : "JMP", reference.instructionRva, reference.moduleName.c_str(), reference.functionName.c_str(), reference.iatRva);
+								}
+
+								outFileInfo.importsInfo.references.push_back(std::move(reference));
+							}
+						}
+					}
+				}
+
+				offset += instruction.length;
 			}
 		}
 

@@ -4,12 +4,6 @@
 #include <Windows.h>
 #include <iostream>
 
-#ifdef _DEBUG
-#define DEBUG_PRINT(fmt, ...) printf(fmt, ##__VA_ARGS__)
-#else
-#define DEBUG_PRINT(fmt, ...)
-#endif
-
 namespace Framework::Utils
 {
 	static void InitializeConsole()
