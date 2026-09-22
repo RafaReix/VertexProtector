@@ -119,7 +119,7 @@ namespace Protector::FileInfo
 		outFileInfo.dosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(outFileInfo.data.data());
 		if (outFileInfo.dosHeader->e_magic != IMAGE_DOS_SIGNATURE)
 		{
-			DEBUG_PRINT("Invalid DOS signature");
+			DEBUG_PRINT("Invalid DOS signature\n");
 			return false;
 		}
 
@@ -127,13 +127,13 @@ namespace Protector::FileInfo
 
 		if (outFileInfo.ntHeaders->Signature != IMAGE_NT_SIGNATURE)
 		{
-			DEBUG_PRINT("Invalid PE signature");
+			DEBUG_PRINT("Invalid PE signature\n");
 			return false;
 		}
 
 		if (outFileInfo.ntHeaders->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
 		{
-			DEBUG_PRINT("x64 binaries not supported");
+			DEBUG_PRINT("x64 binaries not supported\n");
 			return false;
 		}
 
