@@ -131,19 +131,23 @@ namespace Framework::UI::Widgets
 
 	inline void PropertyRow(const char* label, const std::string& value)
 	{
-		ImGui::TableNextRow();
+		ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeight() + 10.0f);
 		ImGui::TableSetColumnIndex(0);
+		ImGui::AlignTextToFramePadding();
 		ImGui::TextDisabled("%s", label);
 		ImGui::TableSetColumnIndex(1);
+		ImGui::AlignTextToFramePadding();
 		ImGui::TextWrapped("%s", value.c_str());
 	}
 
 	inline void StatusRow(const char* label, bool enabled)
 	{
-		ImGui::TableNextRow();
+		ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeight() + 10.0f);
 		ImGui::TableSetColumnIndex(0);
+		ImGui::AlignTextToFramePadding();
 		ImGui::TextUnformatted(label);
 		ImGui::TableSetColumnIndex(1);
+		ImGui::AlignTextToFramePadding();
 		ImGui::TextColored(enabled ? ImVec4(0.25f, 0.85f, 0.45f, 1.0f) : ImVec4(0.95f, 0.45f, 0.35f, 1.0f),
 			enabled ? "Enabled" : "Disabled");
 	}

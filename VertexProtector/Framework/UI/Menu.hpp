@@ -116,12 +116,14 @@ namespace Framework::UI
 					ImGui::EndGroup();
 
 					ImGui::SetCursorPos(ImVec2(200, 0));
-					ImGui::BeginChild("Content", ImVec2(WindowSize.x - 200, WindowSize.y), false);
+					ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(24.0f, 22.0f));
+					ImGui::BeginChild("Content", ImVec2(WindowSize.x - 200, WindowSize.y), ImGuiChildFlags_AlwaysUseWindowPadding);
 					{
 						if (ProtectorTab == 0)
 							RenderInformationTab();
 					}
 					ImGui::EndChild();
+					ImGui::PopStyleVar();
 				}
 			}
 			ImGui::End();
@@ -172,7 +174,6 @@ namespace Framework::UI
 
 		void RenderInformationTab()
 		{
-			ImGui::SetCursorPos(ImVec2(24.0f, 22.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 8.0f));
 			Widgets::PageHeader("PE FILE ANALYSIS", AnalyzedFileInfo.name.c_str(), "Portable Executable overview and import analysis");
 			ImGui::Spacing();
